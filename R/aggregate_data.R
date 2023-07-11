@@ -22,7 +22,7 @@ aggregate_data <- function(responses,
              all(c("project", "country", "year", "item",
                    "respScaleLength", "respondent",
                    "response", "Item", "Item_Cnt") %in% names(df))
-         })))
+         }))))
   
   if (variant %in% c("distributions", "distributionsClaassen")) {
     if (variant == "distributionsClaassen") {
