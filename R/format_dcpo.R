@@ -31,7 +31,7 @@ format_dcpo <- function(responses) {
                      "respScaleLength", "respondent",
                      "response", "Item", "Item_Cnt") %in% names(responses)))
      
-     responses <- aggregate_data(responses, variant = "DCPO"))
+     responses <- aggregate_data(responses, variant = "DCPO")
    }
    
    
