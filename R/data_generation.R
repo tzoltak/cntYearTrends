@@ -65,7 +65,7 @@ generate_country_year_parameters <- function(nCountries, nYears,
   vars[, "1"] <- stats::runif(nCountries,
                               min = arVarStartLB, max = arVarStartUB)
   for (i in 2L:nYears) {
-
+    
     means[, i] <- means[, i - 1L] + stats::rnorm(nCountries, mean = 0,
                                                  sd = arMeanChangeSD)
     means[, i] <- ifelse(means[, i] < arMeanTrendLB,
@@ -127,7 +127,7 @@ generate_items <- function(pCY,
   if (unstLoadingsYSD == 0) unstLoadingsYL <- 0.1
   if (difficultyCSD == 0) difficultyCL <- 0.1
   if (difficultyYSD == 0) difficultyYL <- 0.1
-
+  
   projects <- unique(pCY[, c("project", "respScaleLength", "nItems")])
   items <- tidyr::expand_grid(projects,
                               item = 1L:max(projects$nItems))
@@ -148,7 +148,7 @@ generate_items <- function(pCY,
              },
              relThresholdsL = relThresholdsL,
              maxNCat = max(items$respScaleLength)))
-
+  
   countries <- unique(pCY[, c("country"), drop = FALSE])
   countries$unstLoadingCBias <-
     mnormt::rmtruncnorm(nrow(countries),
@@ -158,7 +158,7 @@ generate_items <- function(pCY,
     mnormt::rmtruncnorm(nrow(countries),
                         0, difficultyCSD,
                         -difficultyCL, difficultyCL)
-
+  
   itemYears <- tidyr::expand_grid(items,
                                   year = unique(pCY$year))
   itemYears$unstLoadingYBias <-
@@ -171,10 +171,10 @@ generate_items <- function(pCY,
                         0, difficultyYSD,
                         -difficultyYL, difficultyYL)
   itemYears$difficultyYBias[itemYears$year == 1] = 0
-
+  
   pCY <- merge(pCY, countries, by = "country")
   pCY <- merge(pCY, itemYears, by = c("project", "year", "respScaleLength"))
-
+  
   pCY$unstLoading <- pCY$unstLoading + pCY$unstLoadingCBias + pCY$unstLoadingYBias
   pCY$difficulty <- pCY$difficulty + pCY$difficultyCBias + pCY$difficultyYBias
   pCY$thresholds <- pCY$difficulty + pCY$relThresholds
@@ -190,8 +190,10 @@ generate_items <- function(pCY,
 #' `respScaleLength`, `respondent` and `response`
 #' @seealso [generate_data]
 generate_responses <- function(latent, items) {
-  respItems <- merge(latent, items,
-                     by = c("project", "country", "year"))
+  respItems <- dplyr::left_join(latent, items, 
+                                by = c("project", "country", "year"), 
+                                relationship =
+                                  "many-to-many")
   respItems$latentResponse <- respItems$latent * respItems$unstLoading +
     stats::rnorm(nrow(respItems), mean = 0, sd = 1)
   respItems$response <-
@@ -256,15 +258,15 @@ generate_data <- function(pCGY,
                           relThresholdsL) {
   nItemsProbs <- eval(str2expression(as.character(nItemsProbs)))
   respScaleLengthProbs <- eval(str2expression(as.character(respScaleLengthProbs)))
-
+  
   pCGY <- pCGY[pCGY$variant == variant, ]
-
+  
   projectCountryYears <- make_countries(pCGY = pCGY,
                                         nCountriesPerGroup = nCountriesPerGroup)
-
+  
   nProjects <- length(unique(projectCountryYears$project))
   nCountries <- length(unique(projectCountryYears$country))
-
+  
   projects <- generate_projects(nProjects = nProjects,
                                 projectBiasesSD = projectBiasesSD,
                                 nItemsProbs = nItemsProbs,
@@ -280,7 +282,7 @@ generate_data <- function(pCGY,
                                      arVarStartLB = arVarStartLB,
                                      arVarStartUB = arVarStartUB,
                                      arVarChangeSD = arVarChangeSD)
-
+  
   projectCountryYears <- merge(projectCountryYears,
                                projects,
                                by = "project")
@@ -298,14 +300,33 @@ generate_data <- function(pCGY,
                           unstLoadingsYSD = unstLoadingsYSD,
                           difficultyCSD = difficultyCSD,
                           difficultyYSD = difficultyYSD)
-  responses <- generate_responses(latent = latent, items = items)
-
+  
+  # Generate responses in chunks to save memory
+  unique_countries <- unique(latent$country)
+  country_chunks <- split(unique_countries, ceiling(seq_along(unique_countries)/5))
+  
+  responses_list <- vector("list", length(country_chunks))
+  
+  # Generate responses for each chunk of countries and store them in the list
+  for(i in seq_along(country_chunks)) {
+    chunk <- country_chunks[[i]]
+    latent_chunk <- latent[latent$country %in% chunk, ]
+    responses_chunk <- generate_responses(latent = latent_chunk, items = items)
+    responses_chunk$Item = paste0("i", responses_chunk$item, "p", responses_chunk$project)
+    responses_chunk$Item_Cnt = paste0(responses_chunk$Item, "c", responses_chunk$country)
+    responses_list[[i]] <- responses_chunk  # store the chunk data frame in the list
+    
+    # Free up memory used by temporary variables
+    rm(latent_chunk, responses_chunk)
+    gc()
+  }
+  
+  
   items$Item = paste0("i", items$item, "p", items$project)
   items$Item_Cnt = paste0(items$Item, "c", items$country)
-  responses$Item = paste0("i", responses$item, "p", responses$project)
-  responses$Item_Cnt = paste0(responses$Item, "c", responses$country)
+
   return(list(countryYears = countryYears,
               projectCountryYears = projectCountryYears,
               items = items,
-              responses = responses))
+              responses = responses_list))
 }

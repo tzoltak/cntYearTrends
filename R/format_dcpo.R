@@ -10,19 +10,37 @@
 #' @importFrom dplyr .data %>%
 #' @export
 format_dcpo <- function(responses) {
-  stopifnot(is.data.frame(responses),
-            all(c("project", "country", "year", "item",
-                  "respScaleLength", "respondent",
-                  "response", "Item", "Item_Cnt") %in% names(responses)))
-  scale_q = "i1p5"
-  scale_cp = 1
-
-  responses <- aggregate_data(responses, variant = "DCPO")
+   scale_q = "i1p5"
+   scale_cp = 1
+  
+   if (is.list(responses)) {
+     
+     responses <- lapply(responses, function(df) {
+       stopifnot(is.data.frame(df),
+                 all(c("project", "country", "year", "item",
+                       "respScaleLength", "respondent",
+                       "response", "Item", "Item_Cnt") %in% names(df)))
+       
+       df <- aggregate_data(df, variant = "DCPO")
+       return(df)
+     })
+     responses <- do.call(rbind, responses)
+   } else {
+     stopifnot(is.data.frame(responses),
+               all(c("project", "country", "year", "item",
+                     "respScaleLength", "respondent",
+                     "response", "Item", "Item_Cnt") %in% names(responses)))
+     
+     responses <- aggregate_data(responses, variant = "DCPO"))
+   }
+   
+   
   # generate cumulative number of respondents with answers above each cutpoint
   responses <- responses %>%
     dplyr::mutate(kk = factor(.data$country, levels = unique(.data$country)),
                   tt = .data$year - min(.data$year) + 1,
                   qq = factor(.data$item, levels = unique(.data$item)),
+                  r = .data$r + 1,
                   rr = .data$r - 1,
                   question = .data$item,
                   item = paste(.data$question, .data$r, "or higher")) %>%

@@ -12,16 +12,32 @@
 format_claassen <- function(responses,
                             variant = c("dichotomous", "multinomial")) {
   variant <- match.arg(variant, several.ok = FALSE)
-  stopifnot(is.data.frame(responses),
-            all(c("project", "country", "year", "item",
-                  "respScaleLength", "respondent",
-                  "response", "Item", "Item_Cnt") %in% names(responses)))
-
-  responses <- aggregate_data(responses, ifelse(variant == "dichotomous",
-                                                "Claassen",
-                                                "ClaassenMulti"))
+  
+  if (is.list(responses)) {
+    
+    responses <- lapply(responses, function(df) {
+      stopifnot(is.data.frame(df),
+                all(c("project", "country", "year", "item",
+                      "respScaleLength", "respondent",
+                      "response", "Item", "Item_Cnt") %in% names(df)))
+      
+      df <- aggregate_data(df, ifelse(variant == "dichotomous",
+                                      "Claassen",
+                                      "ClaassenMulti"))
+      return(df)
+    })
+    responses <- do.call(rbind, responses)
+  } else {
+    stopifnot(is.data.frame(responses),
+              all(c("project", "country", "year", "item",
+                    "respScaleLength", "respondent",
+                    "response", "Item", "Item_Cnt") %in% names(responses)))
+    
+    responses <- aggregate_data(responses, ifelse(variant == "dichotomous",
+                                                  "Claassen",
+                                                  "ClaassenMulti"))
+  }
   responses <- responses[order(responses$Country, responses$Year), ]
-
   # equivalent to logit(mean(responses$Response))
   mean.resp.prop <- mean(responses$RespN / responses$Sample)
   mean.resp.log <- log(mean.resp.prop / (1 - mean.resp.prop))
@@ -44,7 +60,7 @@ format_claassen <- function(responses,
                       Yr = year.r)
   n.r.merg <- merge(n.map, r.map, by = c("Cntry", "Yr"), all.x = TRUE)
   n.r.merg <- n.r.merg[order(n.r.merg$Obs), ]
-
+  
   return(list(dat.1 = list(N = nrow(responses),
                            K = length(unique(responses$Item)),
                            J = length(unique(responses$Country)),
