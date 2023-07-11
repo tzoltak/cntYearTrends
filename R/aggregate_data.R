@@ -10,20 +10,10 @@ aggregate_data <- function(responses,
                            variant = c("distributions", "distributionsClaassen",
                                        "DCPO", "Claassen", "ClaassenMulti")) {
   variant <- match.arg(variant, several.ok = FALSE)
-
-  stopifnot(
-    (is.data.frame(responses) && 
-       all(c("project", "country", "year", "item",
-             "respScaleLength", "respondent",
-             "response", "Item", "Item_Cnt") %in% names(responses))) || 
-      (is.list(responses) && 
-         all(sapply(responses, function(df) {
-           is.data.frame(df) &&
-             all(c("project", "country", "year", "item",
-                   "respScaleLength", "respondent",
-                   "response", "Item", "Item_Cnt") %in% names(df))
-         }))))
-  
+  stopifnot(is.data.frame(responses),
+            all(c("project", "country", "year", "item",
+                  "respScaleLength", "respondent",
+                  "response", "Item", "Item_Cnt") %in% names(responses)))
   if (variant %in% c("distributions", "distributionsClaassen")) {
     if (variant == "distributionsClaassen") {
       responses$response <-
