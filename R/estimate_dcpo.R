@@ -24,14 +24,23 @@ estimate_dcpo <- function(responses, model, iter = 1000L,
                                       iter_sampling = iter / 2,
                                       refresh = iter / 10,
                                       init = 0.1)) {
-  stopifnot(is.data.frame(responses),
-            all(c("project", "country", "year", "item",
-                  "respScaleLength", "respondent",
-                  "response", "Item", "Item_Cnt") %in% names(responses)),
-            inherits(model, "CmdStanModel"),
-            is.numeric(iter), length(iter) == 1L, iter > 0,
-            as.integer(iter) == iter,
-            is.list(pars))
+  stopifnot(
+    (is.data.frame(responses) && 
+       all(c("project", "country", "year", "item",
+             "respScaleLength", "respondent",
+             "response", "Item", "Item_Cnt") %in% names(responses))) || 
+      (is.list(responses) && 
+         all(sapply(responses, function(df) {
+           is.data.frame(df) &&
+             all(c("project", "country", "year", "item",
+                   "respScaleLength", "respondent",
+                   "response", "Item", "Item_Cnt") %in% names(df))
+         }))),
+    inherits(model, "CmdStanModel"),
+    is.numeric(iter), length(iter) == 1L, iter > 0,
+    as.integer(iter) == iter,
+    is.list(pars)
+  )
   defaultPars <- list(max_treedepth = 14,
                       adapt_delta = 0.99,
                       step_size = 0.005,
