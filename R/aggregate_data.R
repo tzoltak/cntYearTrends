@@ -11,10 +11,24 @@ aggregate_data <- function(responses,
                                        "DCPO", "Claassen", "ClaassenMulti")) {
 
   variant <- match.arg(variant, several.ok = FALSE)
-  #stopifnot(is.data.frame(responses),
-  #          all(c("project", "country", "year", "item",
-  #                "respScaleLength", "respondent",
-  #                "response", "Item", "Item_Cnt") %in% names(responses)))
+  
+  if (!is.data.frame(responses)) {
+    
+    # If not, assign it to a new variable in the global environment
+    assign("responses_not_df", responses, envir = .GlobalEnv)
+    
+    # Then you can still stop the function execution, as before
+    stop("Input 'responses' is expected to be a data frame.")
+  } else {
+    # If 'responses' is a data frame, assign it to a new variable in the global environment
+    assign("responses_df", responses, envir = .GlobalEnv)
+  }
+  
+  
+  stopifnot(is.data.frame(responses),
+            all(c("project", "country", "year", "item",
+                  "respScaleLength", "respondent",
+                  "response", "Item", "Item_Cnt") %in% names(responses)))
   if (variant %in% c("distributions", "distributionsClaassen")) {
     if (variant == "distributionsClaassen") {
       responses$response <-
