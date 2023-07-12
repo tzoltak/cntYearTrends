@@ -9,10 +9,10 @@
 aggregate_data <- function(responses,
                            variant = c("distributions", "distributionsClaassen",
                                        "DCPO", "Claassen", "ClaassenMulti")) {
-  if (!is.data.frame(responses)) { 
+
     print(class(responses))
     print(responses) 
-  }
+  
   variant <- match.arg(variant, several.ok = FALSE)
   stopifnot(is.data.frame(responses),
             all(c("project", "country", "year", "item",
