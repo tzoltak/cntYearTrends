@@ -30,6 +30,12 @@ run_iteration <- function(models, coverageScheme, condition, iter, stanPars) {
             is.data.frame(condition), nrow(condition) == 1L,
             is.numeric(iter), length(iter) == 1L, iter > 0,
             as.integer(iter) == iter, is.list(stanPars))
+  
+  
+  if (exists("responses")) {
+    rm(responses)
+  }
+  
   condition <- as.list(condition)
   data <- do.call(generate_data, c(pCGY = list(coverageScheme), condition))
   countryMeans <- data$countryYears
