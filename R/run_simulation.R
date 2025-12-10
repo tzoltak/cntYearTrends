@@ -11,6 +11,9 @@
 #' of a file storing simulation results (that will be saved to the disk)
 #' @param iter optionally a positive integer - number of MCMC iterations in
 #' model estimation
+#' @param max_redraws Optional non-negative integer. Maximum number of retries
+#' to re-generate data if any Claassen aggregate (Country–Year–Item–Project
+#' proportion of affirmative answers) equals 0 or 1. If 0, no retries are made
 #' @param stanPars optionally a list with additional arguments that will be
 #' passed to the Stan models' `sample` method - see [estimate_dcpo] and
 #' [estimate_claassen]
@@ -35,18 +38,21 @@
 #' str(conditions)
 #' str(coverageScheme)
 #' set.seed(12345)
-#' run_simulation(conditions[1:2, ], coverageScheme, nIterPerCond = 1L, iter = 100L)
+#' run_simulation(conditions[1:2, ], coverageScheme, nIterPerCond = 1L, iter = 100L, max_redraws = 10L)
 #' }
 #' @export
 run_simulation <- function(conditions, coverageScheme, nIterPerCond,
-                           suffix = "", iter = 1000L, stanPars = list()) {
+                           suffix = "", iter = 1000L, max_redraws = 5L ,stanPars = list()) {
   check_conditions(conditions)
   check_coverage_scheme(coverageScheme, conditions)
   stopifnot(is.numeric(nIterPerCond), length(nIterPerCond) == 1,
             as.integer(nIterPerCond) == nIterPerCond, nIterPerCond > 0,
             is.character(suffix), length(suffix) == 1L, !anyNA(suffix),
             is.numeric(iter), length(iter) == 1L, iter > 0,
-            as.integer(iter) == iter, is.list(stanPars))
+            as.integer(iter) == iter,
+            is.numeric(max_redraws), length(max_redraws) == 1L, max_redraws >= 0L,
+            as.integer(max_redraws) == max_redraws,
+            is.list(stanPars))
   models <- prepare_stan_models()
   modelSummaries <- countryMeans <- items <- itemDistributions <- data.frame()
   for (i in seq_len(nIterPerCond)) {
@@ -56,7 +62,7 @@ run_simulation <- function(conditions, coverageScheme, nIterPerCond,
           nrow(conditions),")\n#########################################\n\n",
           sep = "")
       resultsIter <- run_iteration(models, coverageScheme, conditions[j, ],
-                                   iter, stanPars)
+                                   iter, stanPars, max_redraws)
       modelSummaries <- dplyr::bind_rows(modelSummaries,
                                          cbind(i = i,
                                                cond = j,
