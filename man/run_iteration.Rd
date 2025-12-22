@@ -4,7 +4,7 @@
 \alias{run_iteration}
 \title{Simulation flow}
 \usage{
-run_iteration(models, coverageScheme, condition, iter, stanPars)
+run_iteration(models, coverageScheme, condition, iter, stanPars, max_redraws)
 }
 \arguments{
 \item{models}{a list of \emph{CmdStanModel} objects - typically returned by
@@ -22,6 +22,10 @@ model estimation}
 \item{stanPars}{optionally a list with additional arguments that will be
 passed to the Stan models' \code{sample} method - see \link{estimate_dcpo} and
 \link{estimate_claassen}}
+
+\item{max_redraws}{Optional non-negative integer. Maximum number of retries
+to re-generate data if any Claassen aggregate (Country–Year–Item–Project
+proportion of affirmative answers) equals 0 or 1. If 0, no retries are made}
 }
 \value{
 a list of three data frames:

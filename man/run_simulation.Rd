@@ -10,6 +10,7 @@ run_simulation(
   nIterPerCond,
   suffix = "",
   iter = 1000L,
+  max_redraws = 5L,
   stanPars = list()
 )
 }
@@ -28,6 +29,10 @@ of a file storing simulation results (that will be saved to the disk)}
 
 \item{iter}{optionally a positive integer - number of MCMC iterations in
 model estimation}
+
+\item{max_redraws}{Optional non-negative integer. Maximum number of retries
+to re-generate data if any Claassen aggregate (Country–Year–Item–Project
+proportion of affirmative answers) equals 0 or 1. If 0, no retries are made}
 
 \item{stanPars}{optionally a list with additional arguments that will be
 passed to the Stan models' \code{sample} method - see \link{estimate_dcpo} and
@@ -60,6 +65,6 @@ See \link{run_iteration}
 str(conditions)
 str(coverageScheme)
 set.seed(12345)
-run_simulation(conditions[1:2, ], coverageScheme, nIterPerCond = 1L, iter = 100L)
+run_simulation(conditions[1:2, ], coverageScheme, nIterPerCond = 1L, iter = 100L, max_redraws = 10L)
 }
 }
