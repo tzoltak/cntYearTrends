@@ -25,15 +25,33 @@
 #'                       within the group of observed country-means)}
 #'   \item{items}{item parameters (generated, not estimated)}
 #' }
-run_iteration <- function(models, coverageScheme, condition, iter, stanPars) {
+run_iteration <- function(models, coverageScheme, condition, iter, stanPars, max_redraws) {
   stopifnot(is.list(models), all(c("dcpo", "claassen") %in% names(models)),
             all(sapply(models, inherits, what = "CmdStanModel")),
             is.data.frame(coverageScheme),
             is.data.frame(condition), nrow(condition) == 1L,
             is.numeric(iter), length(iter) == 1L, iter > 0,
-            as.integer(iter) == iter, is.list(stanPars))
+            as.integer(iter) == iter,
+            is.numeric(max_redraws), length(max_redraws) == 1L, max_redraws >= 0L,
+            as.integer(max_redraws) == max_redraws,
+            is.list(stanPars))
   condition <- as.list(condition)
-  data <- do.call(generate_data, c(pCGY = list(coverageScheme), condition))
+  redraw <- 0L
+  repeat {
+    data <- do.call(generate_data, c(pCGY = list(coverageScheme), condition))
+
+    agg_cls <- aggregate_data(data$responses, variant = "Claassen")
+    prop <- agg_cls$RespN / agg_cls$Sample
+    degenerate <- any(prop == 0 | prop == 1)
+
+    if (!degenerate) break
+
+    redraw <- redraw + 1L
+    if (redraw > max_redraws) {
+      warning("Max redraws reached; proceeding with degenerate Claassen aggregates.")
+      break
+    }
+  }
   countryMeans <- data$countryYears
   countryMeans$meanStd <-
     (countryMeans$mean - mean(countryMeans$mean)) / stats::sd(countryMeans$mean)
