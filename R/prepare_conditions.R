@@ -59,11 +59,11 @@
 #'   nItemsProbs = "c(`1` = 0.3, `2` = 0.4, `3` = 0.3)", # number of items in a project
 #'   respScaleLengthProbs = "c( `2` = 0.1, `4` = 0.2, `5` = 0.3, `7` = 0.3, `10` = 0.1)",
 #'   # country-means and SDs autoregressive process parameters #####################
-#'   arMeanStartLB = -0.5, # the lower bound for the initial means of each country
-#'   arMeanStartUB = 0.5, # the upper bound for the initial means of each country
+#'   arMeanStartLB = -1.0, # the lower bound for the initial means of each country
+#'   arMeanStartUB = 0, # the upper bound for the initial means of each country
 #'   arMeanChangeSD = 0.3, # SD of change of country means relatively to the previous year
-#'   arMeanTrendLB = -1, # the lower bound for the mean trend.
-#'   arMeanTrendUB = 1, # the upper bound for the mean trend.
+#'   arMeanTrendLB = -1.5, # the lower bound for the mean trend.
+#'   arMeanTrendUB = 0.5, # the upper bound for the mean trend.
 #'   arVarStartLB = 0.6, # the lower bound of a uniform distrib.
 #'                       # (of within-countries SDs in the first year)
 #'   arVarStartUB = 1.4, # the upper bound of a uniform distrib.
