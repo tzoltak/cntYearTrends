@@ -79,7 +79,7 @@
 #'   difficultyUB = 0, # upper bound of the uniform distrib. of the project-items first threshold
 #'   thresholdsIncrLB = 0.3, # lower bound of the uniform distrib.
 #'                           # of the project-items threshold increments
-#'   thresholdsIncrUB = 1 # upper bound of the uniform distrib.
+#'   thresholdsIncrUB = 0.5 # upper bound of the uniform distrib.
 #'                        # of the project-items threshold increments
 #' )
 #' (invariance = rbind(
